@@ -50,6 +50,7 @@
   "devDependencies": {
     "@types/react": "^18.0.17",
     "@types/three": "^0.143.1",
+    "raw-loader": "^4.0.2",
     "typescript": "^3.8.3"
   },
   "description": "This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).",

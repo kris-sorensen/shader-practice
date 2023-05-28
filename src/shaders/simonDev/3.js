@@ -27,8 +27,8 @@ const LinearVsSmoothstep = shaderMaterial(
     
     void main(){
       // min
-      float minX = min(vuv.x, .25);
-      float maxX = max(vuv.x, .25);
+      float value1 = vuv.x * (1. - vuv.x) * 4.; // * paraballa
+      float value2 = pow(vuv.x, 2.);
       float clampedX = max(min(vuv.x,.62),.38);
 
       
@@ -39,8 +39,8 @@ const LinearVsSmoothstep = shaderMaterial(
       
       // line
       float line = smoothstep(.0, .005, abs(vuv.y - .5));
-      float linearLine = smoothstep(.0, .0075, abs(vuv.y - mix(.5,1.,minX)));
-      float smoothstepLine = smoothstep(.0, .0075, abs(vuv.y - mix(.0,.5,smoothstep(0., 1.,maxX))));
+      float linearLine = smoothstep(.0, .0075, abs(vuv.y - mix(.5,1.,value1)));
+      float smoothstepLine = smoothstep(.0, .0075, abs(vuv.y - mix(.0,.5,smoothstep(0., 1.,value2))));
       float clampLine = smoothstep(.0, .0075, abs(vuv.y - mix(.5,1., clampedX)));
       
       vec3 color = vec3(line);
@@ -50,7 +50,7 @@ const LinearVsSmoothstep = shaderMaterial(
       if(vuv.y > .5){
         color = mix(violet, cyan, clampedX);
       }else{
-        color = mix(violet, cyan, smoothstep(0., 1., maxX));
+        color = mix(violet, cyan, smoothstep(0., 1., value2));
       }
 
       
@@ -58,7 +58,7 @@ const LinearVsSmoothstep = shaderMaterial(
 
 
       color = mix(white, color, line);
-      // color = mix(white, color, linearLine);
+      color = mix(white, color, linearLine);
       color = mix(white, color, smoothstepLine);
       // color = mix(white, color, clampLine);
 
