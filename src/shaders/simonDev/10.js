@@ -140,7 +140,7 @@ const Vertices = shaderMaterial(
       modelColor = mix(yellow, modelColor, line);
 
       //* top graph line
-      if(vPosition.y > 0.){
+      if(vPosition.y > 0.5){
         
         float t = remap(vPosition.x, -.5, .5, 0., 1.);
 

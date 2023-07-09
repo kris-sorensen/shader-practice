@@ -1,41 +1,46 @@
 import { shaderMaterial } from "@react-three/drei";
 import glsl from "babel-plugin-glsl/macro.js";
 import * as THREE from "three";
-const Lighting = shaderMaterial(
+const WarpedSphere = shaderMaterial(
   {
-    // specMap: new THREE.CubeTexture({
-    //   images: [
-    //     "/cubeMap/nx.png",
-    //     "/cubeMap/ny.png",
-    //     "/cubeMap/nz.png",
-    //     "/cubeMap/px.png",
-    //     "/cubeMap/py.png",
-    //     "/cubeMap/pz.png",
-    //   ],
-    // }),
-    // resolution: {
-    // aspectRatio: {
-    //   value: window.innerWidth / window.innerHeight,
-    // },
-  }, //   value: new THREE.Vector2(window.innerWidth, window.innerHeight),
-  // },
+    time: { value: 0 },
+  },
 
   // vertex shader
   glsl`
     varying vec2 vuv; 
     varying vec3 vNormal;
     varying vec3 vPosition;
+    uniform float time;
+    varying vec3 vColor;
+
+    float inverseLerp(float v, float minValue, float maxValue) {
+      return (v - minValue) / (maxValue - minValue);
+    }
+
+    float remap(float v, float inMin, float inMax, float outMin, float outMax) {
+      float t = inverseLerp(v, inMin, inMax);
+      return mix(outMin, outMax, t);
+    }
 
     void main(){
-      gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+      vec3 localSpacePosition = position;
       
-     
+      float t = sin(localSpacePosition.y * 20. + time * 10.);
+      t = remap(t, -1., 1., 0., .2);
+      localSpacePosition += normal * t;
 
-      vuv = uv;
+
+      // * final
+      gl_Position = projectionMatrix * modelViewMatrix * vec4(localSpacePosition, 1.0);
+      
       // * local space to world space (! renormalize in fragment shader)
       vNormal = (modelMatrix * vec4(normal, 0.0)).xyz;
 
-      vPosition = (modelMatrix * vec4(position, 1.)).xyz;
+      vPosition = (modelMatrix * vec4(localSpacePosition, 1.)).xyz;
+      vColor = mix(vec3(0., 0., 0.5), vec3(.1, .5, .8),smoothstep(0., 0.2, t));
+
+
 
 }`,
 
@@ -44,7 +49,7 @@ const Lighting = shaderMaterial(
   varying vec2 vuv; 
   varying vec3 vNormal;
   varying vec3 vPosition;
-  uniform samplerCube specMap;
+  varying vec3 vColor;
 
 
   
@@ -52,6 +57,7 @@ const Lighting = shaderMaterial(
     vec3 violet = vec3(1.,0.,1.);
     vec3 cyan = vec3(0.,1.,1.);
     vec3 white = vec3(1.,1.,1.);
+    vec3 yellow = vec3(1.,1.,0.);
 
     float inverseLerp(float v, float minValue, float maxValue) {
       return (v - minValue) / (maxValue - minValue);
@@ -72,9 +78,17 @@ const Lighting = shaderMaterial(
 
     
     void main(){
-      vec3 baseColor = vec3(.25,0.,0.);
+      // vec3 color = vec3(1.);
+      vec3 modelColor = cyan;
+
+      
+
+      vec3 baseColor = vColor.xyz;
       vec3 lighting = vec3(0.);
-      vec3 normal = normalize(vNormal);
+
+
+      // vec3 normal = normalize(vNormal);
+      vec3 normal = normalize(cross(dFdx(vPosition.xyz),dFdy(vPosition.xyz)));
       vec3 viewDir = normalize(cameraPosition - vPosition);
 
       //* Ambient Light
@@ -94,43 +108,14 @@ const Lighting = shaderMaterial(
 
       vec3 diffuse = dp * lightColor;
 
-
-      //* Phong Specular 
-      vec3 r = normalize(reflect(-lightDir, normal));
-      float phongValue = max(0., dot(viewDir, r));
-      phongValue = pow(phongValue, 32.);
-      vec3 specular = vec3(phongValue);
-
-
-      // * IBL Specular Environment Lighting
-      vec3 iblCoord = normalize(reflect(-viewDir, normal));
-      vec3 iblSample = textureCube(specMap, iblCoord).xyz;
-
-      specular += iblSample * .5;
-
-
-      // * Fresnel
-      float fresnel = 1. - max(0., dot(viewDir, normal));
-      fresnel = pow(fresnel, 2.);
-
-      specular *= fresnel;
-
       //* Final Lighting
-      lighting = ambient * 0. + hemi * 0. + diffuse * .5;
+      lighting = ambient * 0. + hemi * 0. + diffuse * 1.5;
 
-      vec3 color = baseColor * lighting + specular;
-
-      //* Show Normals
-      // color = normal;
-
-      
-      //! color space => always do this for lighting
-      // color = linearTosRGB(color); // OR
-      color = pow(color, vec3(1. / 2.2)); // About the same
+      vec3 color = baseColor * lighting;
 
       //Final
-      gl_FragColor = vec4(color, 1.0);
+      gl_FragColor = vec4(color, 1.);
     }`
 );
 
-export default Lighting;
+export default WarpedSphere;

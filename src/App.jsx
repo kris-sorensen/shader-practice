@@ -58,12 +58,62 @@ import GridRefMaterial from "./shaders/simonDev/4";
 import RemapMaterial from "./shaders/simonDev/5";
 // import SpiralMaterial from './shaders/points/spiral'
 import SinCosMaterial from "./shaders/simonDev/6";
-import LightingMaterial from "./shaders/simonDev/7";
+import LightingMaterial from "./shaders/simonDev/lighting";
 import ToonShadingMaterial from "./shaders/simonDev/8";
 import VertexTransformMaterial from "./shaders/simonDev/9";
 import VerticesMaterial from "./shaders/simonDev/10";
 import EasingMaterial from "./shaders/simonDev/11";
+import WarpedSphereMaterial from "./shaders/simonDev/12";
+import FunOneMaterial from "./shaders/fun/1";
+import BasicShaderMaterial from "./shaders/simonDev/13/13";
+import SdfMaterial from "./shaders/simonDev/14/simon";
+import RainbowSkyMaterial from "./shaders/fun/rainbow";
 
+const NewShaders = ({ onChangePages }) => {
+  const group = useRef();
+  const { size, scene } = useThree();
+  const [vpWidth, vpHeight] = useAspect(size.width, size.height);
+
+  const handleReflow = useCallback(
+    (w, h) => {
+      onChangePages(h / vpHeight);
+      // console.log({ h, vpHeight, pages: h / vpHeight })
+    },
+    [onChangePages, vpHeight]
+  );
+
+  return (
+    <>
+      <group ref={group} position={[0.5, -1, 0]}>
+        <Flex
+          flexDirection="column"
+          size={[vpWidth, vpHeight, 0]}
+          onReflow={handleReflow}
+          position={[-vpWidth / 2, vpHeight / 2, 0]}
+        >
+          <Box
+            flexDirection="row"
+            alignItems="center"
+            justifyContent="center"
+            flexWrap="wrap"
+            width="100%"
+            // width="70%"
+          >
+            {/* Rainbow */}
+            <RainbowSkyMaterial />
+            {/* SimonDev 7 */}
+            <SdfMaterial />
+            {/* Basic Shader */}
+            <BasicShaderMaterial />
+          </Box>
+        </Flex>
+      </group>
+    </>
+  );
+};
+
+extend({ FunOneMaterial });
+extend({ WarpedSphereMaterial });
 extend({ EasingMaterial });
 extend({ VerticesMaterial });
 extend({ VertexTransformMaterial });
@@ -168,6 +218,12 @@ function Shaders({ onChangePages }) {
     step(t - previousRAF.current);
   });
 
+  const funOne = useRef();
+
+  useFrame(({ clock }) => {
+    // funOne.current.uniforms.time.value = clock.getElapsedTime();
+  });
+
   // useFrame(({ clock }) => {
   //   remap.current.uniforms.time.value = clock.getElapsedTime();
   //   console.log(`Here`, remap.current.uniforms.time.value);
@@ -234,6 +290,14 @@ function Shaders({ onChangePages }) {
             width="100%"
             // width="70%"
           >
+            {/* Fun 1 */}
+            {/* <Box margin={0.05}>
+              <mesh position={[0.5, -0.5, 0]}>
+                <Box args={[2, 2]} />
+                <funOneMaterial uniforms={{ time: 0 }} ref={funOne} />
+              </mesh>
+            </Box> */}
+
             {/* SimonDev 6 */}
             <Box margin={0.05}>
               <mesh position={[0.5, -0.5, 0]}>
@@ -539,15 +603,24 @@ const ObjectShaders = () => {
   });
   return (
     <>
-      {/* SimonDev 11 */}
+      {/* SimonDev 12 */}
       <mesh
+        scale={0.5}
+        position={[0, 0, 0]}
+        // rotation={[Math.PI / 4, 0, -Math.PI / 4]}
+      >
+        <icosahedronGeometry args={[1, 128]} />
+        <warpedSphereMaterial ref={vertices} />
+      </mesh>
+      {/* SimonDev 11 */}
+      {/* <mesh
         scale={1}
         position={[0, 0, 0]}
         // rotation={[Math.PI / 4, 0, -Math.PI / 4]}
       >
         <boxGeometry />
         <easingMaterial ref={vertices} />
-      </mesh>
+      </mesh> */}
       {/* SimonDev 10 */}
       {/* <mesh
         scale={1}
@@ -583,10 +656,11 @@ function App() {
         // orthographic
         // pixelRatio={window.devicePixelRatio}
       >
-        <OrbitControls />
+        {/* <OrbitControls /> */}
         <Suspense fallback={<Html center>loading..</Html>}>
-          <ObjectShaders />
+          {/* <ObjectShaders /> */}
           {/* <Shaders onChangePages={setPages} /> */}
+          <NewShaders onChangePages={setPages} />
         </Suspense>
 
         {/* <EffectComposer>

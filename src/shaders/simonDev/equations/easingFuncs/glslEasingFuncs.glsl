@@ -36,7 +36,6 @@ float easeInOutCubic(float t) {
 }
 
 
-
 // * QUART
 
 float easeInQuart(float t) {
@@ -82,6 +81,7 @@ float easeInOutSine(float t) {
     return -0.5 * (cos(PI * t) - 1.0);
 }
 
+
 // * EXPO
 
 float easeInExpo(float t) {
@@ -114,6 +114,7 @@ float easeInOutCirc(float t) {
     if((t /= 0.5) < 1.0) return -0.5 * (sqrt(1.0 - t * t) - 1.0);
     return 0.5 * (sqrt(1.0 - (t -= 2.0) * t) + 1.0);
 }
+
 
 // * ELASTIC
 
@@ -185,4 +186,12 @@ float easeInBounce(float t) {
 
 float easeOutBounce(float t) {
     return bounce(t);
+}
+
+float easeInOutBounce(float t) {
+    if(t < 0.5) {
+        return 0.5 * (1.0 - bounce(1.0 - 2.0 * t));
+    } else {
+        return 0.5 * bounce(2.0 * t - 1.0) + 0.5;
+    }
 }
